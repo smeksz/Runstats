@@ -10,9 +10,6 @@ class LatestWorldWorker(QObject):
         self.running = True
 
     def get_latest_world_path(self):
-        self.speedrunigt_path = os.path.join(Path.home(),"speedrunigt/latest_world.json")
-        if not os.path.exists(self.speedrunigt_path):
-            raise ValueError(f"Error: {self.speedrunigt_path} is not a valid path")
         with open(self.speedrunigt_path, 'r') as file:
             self.latest_world_data = json.load(file)
         self.latest_world_path = self.latest_world_data['world_path']
@@ -27,8 +24,11 @@ class LatestWorldWorker(QObject):
     
     @Slot()
     def run(self):
-        self.get_latest_world_path()
+        #self.get_latest_world_path()
         # Update latest world path
+        self.speedrunigt_path = os.path.join(Path.home(),"speedrunigt/latest_world.json")
+        if not os.path.exists(self.speedrunigt_path):
+            raise ValueError(f"Error: {self.speedrunigt_path} is not a valid path")
         self._last_mtime = os.path.getmtime(self.speedrunigt_path)
         self.timer = QTimer()
         self.timer.timeout.connect(self._poll_file)

@@ -4,12 +4,18 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 class ClipboardWorker(QObject):
     data_ready = Signal(dict)
+    f3c_amount = 0
+    # DELETE LATER
+    loc = []
 
     def __init__(self):
         super().__init__()
         self.saved_coords = None
         self.running = True
         self.clipboard_watcher = ClipboardWatcher(self.on_clipboard_change)
+
+    def get_f3c_amount(self):
+        pass
 
     def angle_and_distance_between_coordinates(self,x1,z1,x2,z2):
         dx = x2 - x1
@@ -36,6 +42,13 @@ class ClipboardWorker(QObject):
         print("Copied:",new_clipboard)
         if new_clipboard.find("/execute") == -1:
             return
+        # DELETE LATER
+        split = new_clipboard.split("@s ")[1].split(" ")
+        split = self.liststrings_to_float(split)
+        self.loc.append([split[0],split[2],split[3]])
+        if len(self.loc) == 2:
+            self.triangulate(self.loc[0],self.loc[1])
+
         # Getting initial position
         if self.saved_coords == None:
             self.saved_coords = new_clipboard.split("@s ")[1].split(" ")
@@ -60,6 +73,20 @@ class ClipboardWorker(QObject):
             "saved_coords": self.listfloats_to_int(self.saved_coords),
             "cur_coords": self.listfloats_to_int(cur_coords)
         })
+
+    def triangulate(self,loc1,loc2):
+        print(loc1,loc2)
+        x1 = loc1[0]
+        y1 = loc1[1]
+        x2 = loc2[0]
+        y2 = loc2[1]
+        # deg to radian
+        r1 = loc1[2] * math.pi/180
+        r2 = loc2[2] * math.pi/180
+        t = ((y2-y1) * (-math.sin(r2))-(x2-x1) * math.cos(r2)) / (math.cos(r1) * (-math.sin(r2)) - (-math.sin(r1) * math.cos(r2)))
+        target_coords = (math.floor(x1+t * (-math.sin(r1))), math.floor(y1 + t * math.cos(r1)))
+        print("The targeted coords are",target_coords)
+
                 
     @Slot()
     def stop(self):

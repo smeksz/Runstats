@@ -23,13 +23,10 @@ class ClipboardWatcher(threading.Thread):
 
     def run(self):
         while self._running:
-            try:
-                current = pyperclip.paste()
-                if current != self._last_clipboard:
-                    self._last_clipboard = current
-                    self.callback(current)
-            except Exception as e:
-                print(f"Error: {e}")
+            current = pyperclip.paste()
+            if current != self._last_clipboard:
+                self._last_clipboard = current
+                self.callback(current)
 
             time.sleep(self.pause)
 

@@ -5,10 +5,10 @@ from PySide6.QtCore import QObject, Signal, QTimer, Slot
 class StatisticsWorker(QObject):
     data_ready = Signal(object)
 
-    def __init__(self, world_path):
+    def __init__(self):
         super().__init__()
 
-        self.latest_world_path = world_path
+        self.latest_world_path = None
         self.running = True
         self.states = None
         self.stats_file_path = None
@@ -179,27 +179,26 @@ class StatisticsWorker(QObject):
             self.timer.stop()
     @Slot()
     def run(self):
-        cur_world_path = self.latest_world_path
-
-        self.stats_file_path = self.get_statistics_file(cur_world_path)
-
-        self._last_mtime = os.path.getmtime(self.stats_file_path)
+        if self.latest_world_path != None:
+            self._last_mtime = os.path.getmtime(self.stats_file_path)
+        else:
+            self._last_mtime = 0
 
         self.timer = QTimer()
         self.timer.timeout.connect(self._poll_file)
         self.timer.start(100)
     
-        print("Watching:",self.stats_file_path)
 
     def _poll_file(self):
-        mtime = os.path.getmtime(self.stats_file_path)
-        if mtime != self._last_mtime:
-            self._last_mtime = mtime
-            self.stats_change()
+        if self.latest_world_path != None:
+            mtime = os.path.getmtime(self.stats_file_path)
+            if mtime != self._last_mtime:
+                self._last_mtime = mtime
+                self.stats_change()
 
     @Slot(str)
     def latest_world_updated(self,new_world_path):
-        print("Updated to new world path", new_world_path)
+        print("Stats worker updated to new world path", new_world_path)
         self.latest_world_path = new_world_path
         cur_world_path = self.latest_world_path
         self.stats_file_path = self.get_statistics_file(cur_world_path)
