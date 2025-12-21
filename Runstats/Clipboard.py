@@ -4,9 +4,6 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 class ClipboardWorker(QObject):
     data_ready = Signal(dict)
-    f3c_amount = 0
-    # DELETE LATER
-    loc = []
 
     def __init__(self):
         super().__init__()
@@ -23,7 +20,7 @@ class ClipboardWorker(QObject):
         angle = -math.degrees(math.atan2(dx, dz))
         distance = math.sqrt(dx*dx + dz*dz)
 
-        return [round(angle,2), round(distance,0)]
+        return [round(angle,2),distance,0]
 
     def liststrings_to_float(self,list):
         new_list = []
@@ -42,12 +39,6 @@ class ClipboardWorker(QObject):
         print("Copied:",new_clipboard)
         if new_clipboard.find("/execute") == -1:
             return
-        # DELETE LATER
-        split = new_clipboard.split("@s ")[1].split(" ")
-        split = self.liststrings_to_float(split)
-        self.loc.append([split[0],split[2],split[3]])
-        if len(self.loc) == 2:
-            self.triangulate(self.loc[0],self.loc[1])
 
         # Getting initial position
         if self.saved_coords == None:
@@ -67,9 +58,13 @@ class ClipboardWorker(QObject):
             cur_coords[0],cur_coords[2],
             self.saved_coords[0],self.saved_coords[2]
             )
+        print(angle_and_distance[1])
+        distance = int(round(angle_and_distance[1],0))-1
+        if distance < 0:
+            distance = 0
         self.data_ready.emit({
             "angle": angle_and_distance[0],
-            "distance": int(math.floor(angle_and_distance[1])),
+            "distance": distance,
             "saved_coords": self.listfloats_to_int(self.saved_coords),
             "cur_coords": self.listfloats_to_int(cur_coords)
         })
