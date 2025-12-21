@@ -2,5 +2,8 @@ venv/
 __pycache__/
 *.pyc
 ui.bat
+rcc.bat
 grid.png
 .vscode
+Runstats/__pycache__/
+Runstats/Layouts/__pycache__/

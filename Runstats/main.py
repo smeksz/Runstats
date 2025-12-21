@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QApplication, QMainWindow
-from PySide6.QtCore import QThread, QMetaObject, Qt, Signal
+from PySide6.QtCore import QThread, QMetaObject, Qt, Signal, QCoreApplication
+from PySide6.QtGui import QPixmap
 from Layouts.window import Ui_Runstats
 from Clipboard import ClipboardWorker
 from Statistics import StatisticsWorker
@@ -8,6 +9,7 @@ from Qudrant_image_gen import QudrantGridWorker
 from Layouts.GridWidget import GridWidget
 from pathlib import Path
 import sys, math, os, json, appdirs
+import resources_rc
 
 
 class MainWindow(QMainWindow):
@@ -55,7 +57,7 @@ class MainWindow(QMainWindow):
         self.clipboard_worker = ClipboardWorker()
         self.clipboard_worker.moveToThread(self.clipboard_thread)
         self.clipboard_thread.started.connect(self.clipboard_worker.run)
-        self.clipboard_worker.data_ready.connect(lambda data: print("Clipboard Data:", data))
+        self.clipboard_worker.data_ready.connect(self.clipboard_data_emitted)
         self.clipboard_thread.start()
 
         #Statistics
@@ -69,18 +71,32 @@ class MainWindow(QMainWindow):
     
     def quadrant_grid(self,data):
         print("Received quadrant grid:",data)
-        self.ui.picture_test.setPixmap(data.scaled(
-        self.ui.picture_test.size(),
+        self.ui.fort_quadrant.setPixmap(data.scaled(
+        self.ui.fort_quadrant.size(),
         Qt.KeepAspectRatio,
         Qt.FastTransformation  # prevents blurring
     ))
         #self.ui.label.setText("PLEASE PLEASE PLEASE")
+    
+    def set_text(self,object,text):
+        object.setText(QCoreApplication.translate("Runstats", text, None))
+
+    def clipboard_data_emitted(self, data):
+        print("Clipboard Data:", data)
+        saved_coords = data.get("saved_coords")
+        self.set_text(self.ui.hp_location,f"{saved_coords[0]}, {saved_coords[1]}, {saved_coords[2]}")
+        self.set_text(self.ui.hp_distance, str(data.get("distance")))
+        self.set_text(self.ui.hp_angle, str(data.get("angle")))
 
 
     def statistics_data_emitted(self,data):
         print("Satistics Data:", data)
         # Save stats data to json file
         #runstats_path = os.path.join(self.latest_world_path,"stats/runstats.json")
+        runstats_folder_path = os.path.join(appdirs.user_data_dir(),"runstats")
+        if not Path(runstats_folder_path).is_dir():
+            os.makedirs(runstats_folder_path, exist_ok=True)
+
         runstats_path = os.path.join(appdirs.user_data_dir(),os.path.join("runstats",self.get_latest_world_name()))
         if os.path.exists(runstats_path):
             with open(runstats_path,'r') as file:
