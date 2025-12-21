@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>Assets/compass.png</file>
+        <file>Assets/recovery_compass.png</file>
+        <file>Assets/nether_portal.png</file>
+        <file>Assets/fortress.png</file>
+    </qresource>
+</RCC>
